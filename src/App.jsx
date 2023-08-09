@@ -11,9 +11,9 @@ const telegram = window.Telegram.WebApp;
 function App() {
   const [cartItems, setCartItems] = useState([]);
 
-  useEffect(()=>{
-    telegram.ready()
-  })
+  useEffect(() => {
+    telegram.ready();
+  });
 
   const onAddItem = (item) => {
     const existItem = cartItems.find((c) => c.id === item.id);
@@ -47,20 +47,32 @@ function App() {
     }
   };
 
-  const onCheckout = () =>{
-    telegram.MainButton.text = 'Sotib olish :)';
-    telegram.MainButton.show()
-  }
+  const onCheckout = () => {
+    telegram.MainButton.text = "Sotib olish :)";
+    telegram.MainButton.show();
+  };
 
-  const onSendData = useCallback(()=>{
-    telegram.sendData(JSON.stringify(cartItems))
-  }, [cartItems])
+  const onSendData = useCallback(() => {
+    const queryID = telegram.initDataUnsave?.query_id;
 
-  useEffect(()=>{
-    telegram.onEvent('mainButtonClicked', onSendData)
+    if (queryID) {
+      fetch("http://localhost:8000/web-data", {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        bosy:JSON.stringify(cartItems)
+      })
+    } else {
+      telegram.sendData(JSON.stringify(cartItems));
+    }
+  }, [cartItems]);
 
-    return ()=>telegram.offEvent('mainButtonClicked', onSendData)
-  }, [onSendData])
+  useEffect(() => {
+    telegram.onEvent("mainButtonClicked", onSendData);
+
+    return () => telegram.offEvent("mainButtonClicked", onSendData);
+  }, [onSendData]);
 
   return (
     <>
